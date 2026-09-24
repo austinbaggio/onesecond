@@ -8,7 +8,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f1a1c">
 <title>One Second</title>
-<link rel="apple-touch-icon" id="icon">
 <style>
   :root {
     --bg: #0f1a1c;
@@ -88,6 +87,13 @@
   }
   .list a:first-child { border-top: 0; }
   .list a::after { content: "›"; color: var(--muted); font-size: 22px; }
+  .check {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; border-top: 1px solid #ffffff12;
+  }
+  .check:first-child { border-top: 0; }
+  .check input { width: 22px; height: 22px; accent-color: var(--accent); }
+  #setup > p > code { display: block; padding: 12px; margin-bottom: 8px; }
   .row { display: flex; gap: 8px; }
   .row button { flex: 1; padding: 12px; }
   .row button[aria-pressed="true"] { background: var(--accent); color: #062624; }
@@ -110,7 +116,7 @@
     <div id="prompt"></div>
   </div>
   <div class="buttons">
-    <a class="btn secondary" id="open" hidden></a>
+    <div id="open" class="buttons" hidden></div>
     <button class="primary" id="skip">I don't need it right now</button>
     <p id="done" hidden>Nice. Go do something else. <span id="tally"></span></p>
   </div>
@@ -118,31 +124,34 @@
 
 <main id="setup" hidden>
   <h1>One Second</h1>
-  <p class="sub">Take a few breaths before your apps open.</p>
+  <p class="sub">Breathe before Instagram, Facebook, or any app opens.</p>
 
   <h2>Breaths per pause</h2>
   <div class="row" id="breathChoices"></div>
 
-  <h2>1. Pick an app</h2>
+  <h2>Apps to slow down</h2>
   <div class="list" id="appList"></div>
 
-  <div id="steps" hidden>
-    <h2>2. Set up the automation</h2>
-    <p class="note">Your link is copied. Do this once in the <b>Shortcuts</b> app:</p>
-    <ol>
-      <li>Tap <b>Automation</b>, then <b>+</b>, then <b>App</b>.</li>
-      <li>Choose <b><span class="appName"></span></b>, check <b>Is Opened</b>, pick <b>Run Immediately</b>, tap <b>Next</b>, then <b>New Blank Automation</b>.</li>
-      <li>Add <b>Get File from Folder</b>. Folder: <b>Shortcuts</b>. Path: <code class="fileName"></code>. Tap the arrow and turn off <b>Error If Not Found</b>.</li>
-      <li>Add <b>If</b>. Set it to <b>File has any value</b>.</li>
-      <li>Under <b>If</b>, add <b>Delete Files</b> (delete the File). Tap the arrow and turn off <b>Confirm Before Deleting</b>.</li>
-      <li>Under <b>Otherwise</b>, add <b>Text</b> and type <code>ok</code>.</li>
-      <li>Under that, add <b>Save File</b>. Tap the arrow, turn off <b>Ask Where to Save</b>, set the path to <code class="fileName"></code> in Shortcuts, and turn on <b>Overwrite If File Exists</b>.</li>
-      <li>Under that, add <b>Open URLs</b> and paste your link.</li>
-      <li>Tap <b>Done</b>.</li>
-    </ol>
-    <p class="note">Your link: <code id="link"></code></p>
-    <p class="note">The file lets you through once after you choose to continue, so it doesn't loop. Repeat for each app.</p>
-  </div>
+  <h2>Step 1: Make the shortcut (once)</h2>
+  <p class="note">Open the <b>Shortcuts</b> app, tap <b>+</b>, name it <b>One Second</b>, and add these actions in order. Search for each one by name.</p>
+  <ol>
+    <li><b>Get File from Folder</b>. Folder: <b>Shortcuts</b>. Path: <code>onesecond.txt</code>. Tap the arrow, turn off <b>Error If Not Found</b>.</li>
+    <li><b>If</b>. Leave it as <b>File has any value</b>.</li>
+    <li><b>Delete Files</b>. Drag it just under <b>If</b>. Tap the arrow, turn off <b>Confirm Before Deleting</b>.</li>
+    <li><b>Text</b>. Drag it under <b>Otherwise</b>. Type <code>ok</code>.</li>
+    <li><b>Save File</b>, under the Text. Tap the arrow, turn off <b>Ask Where to Save</b>, set the path to <code>onesecond.txt</code>, turn on <b>Overwrite If File Exists</b>.</li>
+    <li><b>Open URLs</b>, under Save File. Paste this link:</li>
+  </ol>
+  <p><code id="link"></code></p>
+  <button class="secondary" id="copy">Copy link</button>
+
+  <h2>Step 2: Make the automation (once)</h2>
+  <ol>
+    <li>In Shortcuts, tap <b>Automation</b>, then <b>+</b>, then <b>App</b>.</li>
+    <li>Tap <b>Choose</b> and select <b id="appNames"></b>. Check <b>Is Opened</b>. Pick <b>Run Immediately</b>. Tap <b>Next</b>.</li>
+    <li>Pick <b>One Second</b> from your shortcuts.</li>
+  </ol>
+  <p class="note">Done. Open Instagram and the breathing screen jumps in front. To add another app later, edit the automation and select it too.</p>
 </main>
 
 <script>
@@ -177,26 +186,6 @@ function resolveApp() {
     return { name, scheme: scheme.includes("://") ? scheme : scheme + "://", color: "#3fb8af" };
   }
   return null;
-}
-
-// Home screen icon: the app's color with its first letter inside a ring.
-function setIcon(app) {
-  const c = document.createElement("canvas");
-  c.width = c.height = 180;
-  const g = c.getContext("2d");
-  g.fillStyle = app.color;
-  g.fillRect(0, 0, 180, 180);
-  g.strokeStyle = "rgba(255,255,255,.9)";
-  g.lineWidth = 8;
-  g.beginPath();
-  g.arc(90, 90, 58, 0, Math.PI * 2);
-  g.stroke();
-  g.fillStyle = "#fff";
-  g.font = "600 64px -apple-system, system-ui, sans-serif";
-  g.textAlign = "center";
-  g.textBaseline = "middle";
-  g.fillText(app.name[0].toUpperCase(), 90, 94);
-  $("icon").href = c.toDataURL("image/png");
 }
 
 // ---- Breathing mode ----
@@ -236,13 +225,17 @@ async function runSession(app, breaths) {
   }
 }
 
-function startBreathing(app) {
-  const breaths = Math.max(1, Math.min(10, parseInt(params.get("breaths")) || 3));
-  document.title = app.name;
-  setIcon(app);
+function startBreathing(apps) {
+  const breaths = Math.max(1, Math.min(10, parseInt(params.get("breaths") ?? store("breaths", "3")) || 3));
+  const app = apps.length === 1 ? apps[0] : { name: "it" };
   $("breathe").hidden = false;
-  $("open").textContent = `Open ${app.name}`;
-  $("open").href = app.scheme;
+  for (const a of apps) {
+    const link = document.createElement("a");
+    link.className = "btn secondary";
+    link.textContent = `Open ${a.name}`;
+    link.href = a.scheme;
+    $("open").append(link);
+  }
 
   $("skip").onclick = () => {
     session++;
@@ -265,30 +258,40 @@ function startBreathing(app) {
 }
 
 // ---- Setup mode ----
+function selectedKeys() {
+  try { return JSON.parse(store("apps", '["instagram","facebook"]')); } catch { return ["instagram", "facebook"]; }
+}
+
 function startSetup() {
   $("setup").hidden = false;
   let breaths = parseInt(store("breaths", "3"));
-
-  const linkFor = query => `?${query}${breaths !== 3 ? `&breaths=${breaths}` : ""}`;
+  const link = new URL("?breathe", location.href).href;
+  $("link").textContent = link;
+  $("copy").onclick = async () => {
+    try { await navigator.clipboard.writeText(link); $("copy").textContent = "Copied"; } catch {}
+  };
 
   function renderApps() {
+    const keys = selectedKeys();
     $("appList").innerHTML = "";
     for (const [key, app] of Object.entries(APPS)) {
-      const a = document.createElement("a");
-      a.textContent = app.name;
-      a.href = linkFor(`app=${key}`);
-      a.onclick = e => {
-        e.preventDefault();
-        const url = new URL(a.getAttribute("href"), location.href).href;
-        try { navigator.clipboard.writeText(url); } catch {}
-        document.querySelectorAll(".appName").forEach(x => x.textContent = app.name);
-        document.querySelectorAll(".fileName").forEach(x => x.textContent = `onesecond-${key}.txt`);
-        $("link").textContent = url;
-        $("steps").hidden = false;
-        $("steps").scrollIntoView({ behavior: "smooth" });
+      const label = document.createElement("label");
+      label.className = "check";
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = keys.includes(key);
+      box.onchange = () => {
+        const next = Object.keys(APPS).filter(k => k === key ? box.checked : selectedKeys().includes(k));
+        save("apps", JSON.stringify(next));
+        renderNames();
       };
-      $("appList").append(a);
+      label.append(app.name, box);
+      $("appList").append(label);
     }
+  }
+  function renderNames() {
+    const names = selectedKeys().map(k => APPS[k].name);
+    $("appNames").textContent = names.length ? names.join(", ") : "your apps";
   }
 
   for (const n of [1, 3, 5, 10]) {
@@ -301,16 +304,17 @@ function startSetup() {
       save("breaths", n);
       document.querySelectorAll("#breathChoices button")
         .forEach(x => x.setAttribute("aria-pressed", x === b));
-      renderApps();
     };
     $("breathChoices").append(b);
   }
   renderApps();
-
+  renderNames();
 }
 
 const app = resolveApp();
-app ? startBreathing(app) : startSetup();
+if (app) startBreathing([app]);
+else if (params.has("breathe")) startBreathing(selectedKeys().map(k => APPS[k]).filter(Boolean));
+else startSetup();
 
 // Cache the page so it works offline after the first visit.
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
