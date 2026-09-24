@@ -6,8 +6,9 @@ A tiny iPhone app that makes you take a few slow breaths before Instagram, Faceb
 
 `docs/` has a single web page that does the breathing. You add one home screen icon per app. Tapping it makes you breathe first, then it offers to open the real app.
 
-1. Host it with GitHub Pages: repo Settings > Pages > Deploy from a branch > pick the branch and `/docs`. (Private repos need a paid GitHub plan for Pages. Otherwise make the repo public, since there's nothing secret in it.)
-2. On your iPhone, open the Pages link in Safari and follow the steps on the page.
+1. Make this repo public (Settings > General > Danger Zone > Change visibility). Nothing in it is secret.
+2. Turn on GitHub Pages (Settings > Pages > Deploy from a branch > `claude/mindfulness-app-gate-u2ighx`, folder `/docs` > Save).
+3. On your iPhone, open https://austinbaggio.github.io/onesecond/ in Safari and follow the steps on the page.
 
 After the first load, the page is cached on the phone and makes no network calls. It only catches opens from your home screen icon. Opening the real app from the App Library, Spotlight, or a notification skips it.
 
