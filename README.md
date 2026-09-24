@@ -6,7 +6,7 @@ A tiny iPhone app that makes you take a few slow breaths before Instagram, Faceb
 
 The breathing page is live at https://austinbaggio.github.io/onesecond/ (served from the `gh-pages` branch).
 
-A Shortcuts automation ("When Instagram is opened") sends you to the page every time the app opens, however you open it. After breathing you choose to continue or walk away. A small file in the Shortcuts folder lets you through once after you continue, so it doesn't loop. Open the page on your iPhone and pick an app for step-by-step setup.
+You build one small shortcut ("One Second") and one automation that runs it when any of your chosen apps opens. The shortcut opens the breathing page. After breathing you choose to continue or walk away. A small file in the Shortcuts folder lets you through once after you continue, so it doesn't loop. Open the page on your iPhone for the step-by-step setup.
 
 The page is static and cached on the phone. It sends nothing anywhere.
 
