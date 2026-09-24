@@ -2,15 +2,13 @@
 
 A tiny iPhone app that makes you take a few slow breaths before Instagram, Facebook, or any app you add will open. Everything stays on the phone. No accounts, no network calls, no analytics.
 
-## Quickest option: home screen web app (no Mac needed)
+## Quickest option: Shortcuts + web page (free, no Mac)
 
-`docs/` has a single web page that does the breathing. You add one home screen icon per app. Tapping it makes you breathe first, then it offers to open the real app.
+The breathing page is live at https://austinbaggio.github.io/onesecond/ (served from the `gh-pages` branch).
 
-1. Make this repo public (Settings > General > Danger Zone > Change visibility). Nothing in it is secret.
-2. Turn on GitHub Pages (Settings > Pages > Deploy from a branch > `claude/mindfulness-app-gate-u2ighx`, folder `/docs` > Save).
-3. On your iPhone, open https://austinbaggio.github.io/onesecond/ in Safari and follow the steps on the page.
+A Shortcuts automation ("When Instagram is opened") sends you to the page every time the app opens, however you open it. After breathing you choose to continue or walk away. A small file in the Shortcuts folder lets you through once after you continue, so it doesn't loop. Open the page on your iPhone and pick an app for step-by-step setup.
 
-After the first load, the page is cached on the phone and makes no network calls. It only catches opens from your home screen icon. Opening the real app from the App Library, Spotlight, or a notification skips it.
+The page is static and cached on the phone. It sends nothing anywhere.
 
 ## Native app version
 

@@ -97,6 +97,7 @@
     border: 1px solid #ffffff1a; border-radius: 12px; padding: 12px 14px; width: 100%;
   }
   ol { padding-left: 20px; margin: 0; }
+  code { background: var(--card); padding: 2px 6px; border-radius: 6px; font-size: 15px; word-break: break-all; }
   ol li { margin-bottom: 8px; }
   .note { color: var(--muted); font-size: 15px; }
 </style>
@@ -122,24 +123,26 @@
   <h2>Breaths per pause</h2>
   <div class="row" id="breathChoices"></div>
 
-  <h2>Pick an app to set up</h2>
+  <h2>1. Pick an app</h2>
   <div class="list" id="appList"></div>
 
-  <h2>Or add another app</h2>
-  <div class="custom">
-    <input id="customName" placeholder="Name, e.g. Pinterest" autocomplete="off">
-    <input id="customScheme" placeholder="Link, e.g. pinterest://" autocapitalize="off" autocorrect="off" autocomplete="off">
-    <button class="secondary" id="customGo">Set up</button>
+  <div id="steps" hidden>
+    <h2>2. Set up the automation</h2>
+    <p class="note">Your link is copied. Do this once in the <b>Shortcuts</b> app:</p>
+    <ol>
+      <li>Tap <b>Automation</b>, then <b>+</b>, then <b>App</b>.</li>
+      <li>Choose <b><span class="appName"></span></b>, check <b>Is Opened</b>, pick <b>Run Immediately</b>, tap <b>Next</b>, then <b>New Blank Automation</b>.</li>
+      <li>Add <b>Get File from Folder</b>. Folder: <b>Shortcuts</b>. Path: <code class="fileName"></code>. Tap the arrow and turn off <b>Error If Not Found</b>.</li>
+      <li>Add <b>If</b>. Set it to <b>File has any value</b>.</li>
+      <li>Under <b>If</b>, add <b>Delete Files</b> (delete the File). Tap the arrow and turn off <b>Confirm Before Deleting</b>.</li>
+      <li>Under <b>Otherwise</b>, add <b>Text</b> and type <code>ok</code>.</li>
+      <li>Under that, add <b>Save File</b>. Tap the arrow, turn off <b>Ask Where to Save</b>, set the path to <code class="fileName"></code> in Shortcuts, and turn on <b>Overwrite If File Exists</b>.</li>
+      <li>Under that, add <b>Open URLs</b> and paste your link.</li>
+      <li>Tap <b>Done</b>.</li>
+    </ol>
+    <p class="note">Your link: <code id="link"></code></p>
+    <p class="note">The file lets you through once after you choose to continue, so it doesn't loop. Repeat for each app.</p>
   </div>
-
-  <h2>How to set it up</h2>
-  <ol>
-    <li>Tap an app above. A breathing page opens.</li>
-    <li>Tap Share, then <b>Add to Home Screen</b>. Leave "Open as Web App" on and tap Add.</li>
-    <li>Put the new icon where the real app used to be.</li>
-    <li>Long-press the real app and choose <b>Remove App &gt; Remove from Home Screen</b>. It stays installed in the App Library.</li>
-  </ol>
-  <p class="note">Now tapping that icon makes you breathe first. Everything runs on your phone and nothing is sent anywhere.</p>
 </main>
 
 <script>
@@ -274,6 +277,16 @@ function startSetup() {
       const a = document.createElement("a");
       a.textContent = app.name;
       a.href = linkFor(`app=${key}`);
+      a.onclick = e => {
+        e.preventDefault();
+        const url = new URL(a.getAttribute("href"), location.href).href;
+        try { navigator.clipboard.writeText(url); } catch {}
+        document.querySelectorAll(".appName").forEach(x => x.textContent = app.name);
+        document.querySelectorAll(".fileName").forEach(x => x.textContent = `onesecond-${key}.txt`);
+        $("link").textContent = url;
+        $("steps").hidden = false;
+        $("steps").scrollIntoView({ behavior: "smooth" });
+      };
       $("appList").append(a);
     }
   }
@@ -294,11 +307,6 @@ function startSetup() {
   }
   renderApps();
 
-  $("customGo").onclick = () => {
-    const name = $("customName").value.trim(), scheme = $("customScheme").value.trim();
-    if (!name || !scheme) return;
-    location.href = linkFor(`name=${encodeURIComponent(name)}&scheme=${encodeURIComponent(scheme)}`);
-  };
 }
 
 const app = resolveApp();
