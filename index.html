@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f1a1c">
+<title>One Second</title>
+<link rel="apple-touch-icon" id="icon">
+<style>
+  :root {
+    --bg: #0f1a1c;
+    --fg: #eef6f5;
+    --muted: #8fa8a6;
+    --accent: #3fb8af;
+    --card: #182729;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.45 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+  }
+  [hidden] { display: none !important; }
+
+  /* Breathing screen */
+  #breathe {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 48px 0 32px;
+  }
+  .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px; }
+  .ring {
+    width: min(72vw, 300px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+  .ball {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #7fe0d8, var(--accent));
+    transform: scale(0.35);
+    transition-property: transform;
+    transition-timing-function: ease-in-out;
+  }
+  #count { position: relative; font-size: 44px; font-weight: 300; }
+  #prompt { font-size: 24px; font-weight: 500; text-align: center; min-height: 2.6em; }
+  .buttons { width: 100%; max-width: 420px; display: grid; gap: 12px; }
+  button, .btn {
+    appearance: none;
+    border: 0;
+    border-radius: 14px;
+    padding: 16px;
+    font: inherit;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    cursor: pointer;
+  }
+  .primary { background: var(--accent); color: #062624; }
+  .secondary { background: var(--card); color: var(--fg); }
+  #done { text-align: center; color: var(--muted); }
+
+  /* Setup screen */
+  #setup { max-width: 520px; margin: 0 auto; padding: 32px 0 48px; }
+  h1 { font-size: 30px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 28px 0 10px; }
+  .list { background: var(--card); border-radius: 14px; overflow: hidden; }
+  .list a {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; color: var(--fg); text-decoration: none;
+    border-top: 1px solid #ffffff12;
+  }
+  .list a:first-child { border-top: 0; }
+  .list a::after { content: "›"; color: var(--muted); font-size: 22px; }
+  .row { display: flex; gap: 8px; }
+  .row button { flex: 1; padding: 12px; }
+  .row button[aria-pressed="true"] { background: var(--accent); color: #062624; }
+  .custom { display: grid; gap: 8px; }
+  input {
+    font: inherit; color: var(--fg); background: var(--card);
+    border: 1px solid #ffffff1a; border-radius: 12px; padding: 12px 14px; width: 100%;
+  }
+  ol { padding-left: 20px; margin: 0; }
+  ol li { margin-bottom: 8px; }
+  .note { color: var(--muted); font-size: 15px; }
+</style>
+</head>
+<body>
+
+<main id="breathe" hidden>
+  <div class="stage">
+    <div class="ring"><div class="ball" id="ball"></div><span id="count"></span></div>
+    <div id="prompt"></div>
+  </div>
+  <div class="buttons">
+    <a class="btn secondary" id="open" hidden></a>
+    <button class="primary" id="skip">I don't need it right now</button>
+    <p id="done" hidden>Nice. Go do something else. <span id="tally"></span></p>
+  </div>
+</main>
+
+<main id="setup" hidden>
+  <h1>One Second</h1>
+  <p class="sub">Take a few breaths before your apps open.</p>
+
+  <h2>Breaths per pause</h2>
+  <div class="row" id="breathChoices"></div>
+
+  <h2>Pick an app to set up</h2>
+  <div class="list" id="appList"></div>
+
+  <h2>Or add another app</h2>
+  <div class="custom">
+    <input id="customName" placeholder="Name, e.g. Pinterest" autocomplete="off">
+    <input id="customScheme" placeholder="Link, e.g. pinterest://" autocapitalize="off" autocorrect="off" autocomplete="off">
+    <button class="secondary" id="customGo">Set up</button>
+  </div>
+
+  <h2>How to set it up</h2>
+  <ol>
+    <li>Tap an app above. A breathing page opens.</li>
+    <li>Tap Share, then <b>Add to Home Screen</b>. Leave "Open as Web App" on and tap Add.</li>
+    <li>Put the new icon where the real app used to be.</li>
+    <li>Long-press the real app and choose <b>Remove App &gt; Remove from Home Screen</b>. It stays installed in the App Library.</li>
+  </ol>
+  <p class="note">Now tapping that icon makes you breathe first. Everything runs on your phone and nothing is sent anywhere.</p>
+</main>
+
+<script>
+const APPS = {
+  instagram: { name: "Instagram", scheme: "instagram://", color: "#d6336c" },
+  facebook:  { name: "Facebook",  scheme: "fb://",        color: "#1877f2" },
+  tiktok:    { name: "TikTok",    scheme: "tiktok://",    color: "#111111" },
+  x:         { name: "X",         scheme: "twitter://",   color: "#222222" },
+  youtube:   { name: "YouTube",   scheme: "youtube://",   color: "#e62117" },
+  reddit:    { name: "Reddit",    scheme: "reddit://",    color: "#ff4500" },
+  snapchat:  { name: "Snapchat",  scheme: "snapchat://",  color: "#e6c800" },
+  threads:   { name: "Threads",   scheme: "barcelona://", color: "#333333" },
+  linkedin:  { name: "LinkedIn",  scheme: "linkedin://",  color: "#0a66c2" },
+};
+const INHALE = 4000, EXHALE = 6000;
+
+const params = new URLSearchParams(location.search);
+const $ = id => document.getElementById(id);
+
+function store(key, fallback) {
+  try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
+}
+function save(key, value) {
+  try { localStorage.setItem(key, value); } catch {}
+}
+
+function resolveApp() {
+  const key = params.get("app");
+  if (key && APPS[key]) return APPS[key];
+  const name = params.get("name"), scheme = params.get("scheme");
+  if (name && scheme) {
+    return { name, scheme: scheme.includes("://") ? scheme : scheme + "://", color: "#3fb8af" };
+  }
+  return null;
+}
+
+// Home screen icon: the app's color with its first letter inside a ring.
+function setIcon(app) {
+  const c = document.createElement("canvas");
+  c.width = c.height = 180;
+  const g = c.getContext("2d");
+  g.fillStyle = app.color;
+  g.fillRect(0, 0, 180, 180);
+  g.strokeStyle = "rgba(255,255,255,.9)";
+  g.lineWidth = 8;
+  g.beginPath();
+  g.arc(90, 90, 58, 0, Math.PI * 2);
+  g.stroke();
+  g.fillStyle = "#fff";
+  g.font = "600 64px -apple-system, system-ui, sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillText(app.name[0].toUpperCase(), 90, 94);
+  $("icon").href = c.toDataURL("image/png");
+}
+
+// ---- Breathing mode ----
+let session = 0;
+
+function wait(ms, id) {
+  return new Promise((resolve, reject) =>
+    setTimeout(() => (id === session ? resolve() : reject()), ms));
+}
+
+async function runSession(app, breaths) {
+  const id = ++session;
+  const ball = $("ball"), prompt = $("prompt"), count = $("count");
+  $("open").hidden = true;
+  $("done").hidden = true;
+  $("skip").hidden = false;
+  ball.style.transitionDuration = "0ms";
+  ball.style.transform = "scale(0.35)";
+  try {
+    await wait(300, id);
+    for (let left = breaths; left > 0; left--) {
+      count.textContent = left;
+      prompt.textContent = "Breathe in";
+      ball.style.transitionDuration = INHALE + "ms";
+      ball.style.transform = "scale(1)";
+      await wait(INHALE, id);
+      prompt.textContent = "Breathe out";
+      ball.style.transitionDuration = EXHALE + "ms";
+      ball.style.transform = "scale(0.35)";
+      await wait(EXHALE, id);
+    }
+    count.textContent = "";
+    prompt.textContent = `Do you still want to open ${app.name}?`;
+    $("open").hidden = false;
+  } catch {
+    // A newer session replaced this one.
+  }
+}
+
+function startBreathing(app) {
+  const breaths = Math.max(1, Math.min(10, parseInt(params.get("breaths")) || 3));
+  document.title = app.name;
+  setIcon(app);
+  $("breathe").hidden = false;
+  $("open").textContent = `Open ${app.name}`;
+  $("open").href = app.scheme;
+
+  $("skip").onclick = () => {
+    session++;
+    const n = parseInt(store("skipped", "0")) + 1;
+    save("skipped", n);
+    $("prompt").textContent = "";
+    $("count").textContent = "";
+    $("skip").hidden = true;
+    $("open").hidden = true;
+    $("tally").textContent = n > 1 ? `You've walked away ${n} times.` : "";
+    $("done").hidden = false;
+  };
+
+  runSession(app, breaths);
+  // Home screen web apps resume where they left off, so start over each time it's opened.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") runSession(app, breaths);
+  });
+  window.addEventListener("pageshow", e => { if (e.persisted) runSession(app, breaths); });
+}
+
+// ---- Setup mode ----
+function startSetup() {
+  $("setup").hidden = false;
+  let breaths = parseInt(store("breaths", "3"));
+
+  const linkFor = query => `?${query}${breaths !== 3 ? `&breaths=${breaths}` : ""}`;
+
+  function renderApps() {
+    $("appList").innerHTML = "";
+    for (const [key, app] of Object.entries(APPS)) {
+      const a = document.createElement("a");
+      a.textContent = app.name;
+      a.href = linkFor(`app=${key}`);
+      $("appList").append(a);
+    }
+  }
+
+  for (const n of [1, 3, 5, 10]) {
+    const b = document.createElement("button");
+    b.className = "secondary";
+    b.textContent = n;
+    b.setAttribute("aria-pressed", n === breaths);
+    b.onclick = () => {
+      breaths = n;
+      save("breaths", n);
+      document.querySelectorAll("#breathChoices button")
+        .forEach(x => x.setAttribute("aria-pressed", x === b));
+      renderApps();
+    };
+    $("breathChoices").append(b);
+  }
+  renderApps();
+
+  $("customGo").onclick = () => {
+    const name = $("customName").value.trim(), scheme = $("customScheme").value.trim();
+    if (!name || !scheme) return;
+    location.href = linkFor(`name=${encodeURIComponent(name)}&scheme=${encodeURIComponent(scheme)}`);
+  };
+}
+
+const app = resolveApp();
+app ? startBreathing(app) : startSetup();
+
+// Cache the page so it works offline after the first visit.
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
